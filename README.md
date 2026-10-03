@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # RISC-V Based Smart Control SoC with PWM, SPI and Seven-Segment Display
 
 A compact, programmable System-on-Chip built around a RISC-V processor core, connected through a
@@ -47,3 +48,7 @@ cd proj-dir
 ## License
 
 Add your chosen license here (e.g. MIT, Apache-2.0) before making the repository public.
+=======
+# Honours-lab
+tasks done in honours lab
+>>>>>>> a5a4083360672ccf31bd5b393c932ae5290afcd2
