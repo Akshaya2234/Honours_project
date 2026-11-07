@@ -151,7 +151,7 @@ module tb_timer_vip_test;
     end
 
     initial begin
-        uvm_config_db#(virtual timer_if)::set(null, "*", "vif", vif);
+        uvm_config_db#(virtual timer_if)::set(null, "*", "timer_vif", vif);
         run_test("timer_vip_sanity_test");
     end
 

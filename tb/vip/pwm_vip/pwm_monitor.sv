@@ -21,9 +21,8 @@ class pwm_monitor extends uvm_monitor;
 
     virtual function void build_phase(uvm_phase phase);
         super.build_phase(phase);
-        if (!uvm_config_db#(virtual pwm_if)::get(this, "", "pwm_vif", vif) &&
-            !uvm_config_db#(virtual pwm_if)::get(this, "", "vif", vif)) begin
-            `uvm_fatal("NOVIF", {"Virtual interface must be set for: ", get_full_name(), ".vif (or pwm_vif)"})
+        if (!uvm_config_db#(virtual pwm_if)::get(this, "", "pwm_vif", vif)) begin
+            `uvm_fatal("NOVIF", {"Virtual interface must be set for: ", get_full_name(), ".pwm_vif"})
         end
         if (!uvm_config_db#(pwm_config)::get(this, "", "cfg", cfg)) begin
             `uvm_info("NOCFG", "Using default pwm_config in monitor", UVM_MEDIUM)

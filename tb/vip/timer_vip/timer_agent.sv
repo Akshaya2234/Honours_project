@@ -24,12 +24,10 @@ class timer_agent extends uvm_agent;
             cfg = timer_config::type_id::create("cfg");
         end
 
-        if (!uvm_config_db#(virtual timer_if)::get(this, "", "timer_vif", vif) &&
-            !uvm_config_db#(virtual timer_if)::get(this, "", "vif", vif)) begin
-            `uvm_fatal("NOVIF", {"Virtual interface must be set for: ", get_full_name(), ".vif (or timer_vif)"})
+        if (!uvm_config_db#(virtual timer_if)::get(this, "", "timer_vif", vif)) begin
+            `uvm_fatal("NOVIF", {"Virtual interface must be set for: ", get_full_name(), ".timer_vif"})
         end
 
-        uvm_config_db#(virtual timer_if)::set(this, "monitor", "vif", vif);
         uvm_config_db#(virtual timer_if)::set(this, "monitor", "timer_vif", vif);
         uvm_config_db#(timer_config)::set(this, "monitor", "cfg", cfg);
 

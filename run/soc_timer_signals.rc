@@ -1,0 +1,32 @@
+; ==============================================================================
+; Verdi Signal List & Waveform Layout for Single-IP Timer SoC UVM Integration
+; Project: RISC-V Smart Control SoC - Honours Project
+; Target : Real DUT (soc_top) + Timer VIP Interface
+; ==============================================================================
+
+; --- GROUP 1: CLOCK AND RESET ---
+addGroup "GROUP 1: CLOCK AND RESET"
+addSignal -h 15 /tb_soc_timer/clk
+addSignal -h 15 /tb_soc_timer/rst_n
+
+; --- GROUP 2: TIMER PACING (DUT vs INTERFACE vs VIP MONITOR) ---
+addGroup "GROUP 2: TIMER PACING (DUT vs INTERFACE vs VIP MONITOR)"
+addSignal -h 15 /tb_soc_timer/dut_sample_tick
+addSignal -h 15 /tb_soc_timer/interface_sample_tick
+addSignal -h 15 /tb_soc_timer/uvm_vip_monitor_sample_tick
+addSignal -h 15 /tb_soc_timer/dut_irq_timer
+addSignal -h 15 /tb_soc_timer/interface_irq_timer
+addSignal -h 15 /tb_soc_timer/uvm_vip_monitor_irq_timer
+
+; --- GROUP 3: TIMER INTERNAL REGISTERS & COUNTER ---
+addGroup "GROUP 3: TIMER INTERNAL REGISTERS & COUNTER"
+addSignal -h 15 /tb_soc_timer/internal_timer_en
+addSignal -h 15 -UDEC /tb_soc_timer/internal_timer_reload[31:0]
+addSignal -h 15 -UDEC /tb_soc_timer/internal_timer_count[31:0]
+addSignal -h 15 /tb_soc_timer/internal_timer_tick
+
+; --- GROUP 4: RISC-V CPU EXECUTION ---
+addGroup "GROUP 4: RISC-V CPU"
+addSignal -h 15 -HEX /tb_soc_timer/dut/trace_rv_i_address_ip[31:0]
+addSignal -h 15 -HEX /tb_soc_timer/dut/trace_rv_i_insn_ip[31:0]
+addSignal -h 15 /tb_soc_timer/dut/trace_rv_i_valid_ip

@@ -1,0 +1,36 @@
+; ==============================================================================
+; Verdi Signal List & Waveform Layout for Single-IP GPIO SoC UVM Integration
+; Project: RISC-V Smart Control SoC - Honours Project
+; Target : Real DUT (soc_top) + GPIO VIP Interface
+; ==============================================================================
+
+; --- GROUP 1: CLOCK AND RESET ---
+addGroup "GROUP 1: CLOCK AND RESET"
+addSignal -h 15 /tb_soc_gpio/clk
+addSignal -h 15 /tb_soc_gpio/rst_n
+
+; --- GROUP 2: GPIO OUTPUT (DUT vs INTERFACE vs VIP MONITOR) ---
+addGroup "GROUP 2: GPIO OUT (DUT vs INTERFACE vs VIP MONITOR)"
+addSignal -h 15 -HEX /tb_soc_gpio/dut_gpio_out[7:0]
+addSignal -h 15 -HEX /tb_soc_gpio/interface_gpio_out[7:0]
+addSignal -h 15 -HEX /tb_soc_gpio/uvm_vip_monitor_gpio_out[7:0]
+addSignal -h 15 -HEX /tb_soc_gpio/internal_reg_gpio_out[7:0]
+
+; --- GROUP 3: GPIO INPUT (DUT vs INTERFACE vs VIP DRIVER) ---
+addGroup "GROUP 3: GPIO IN (DUT vs INTERFACE vs VIP DRIVER)"
+addSignal -h 15 -HEX /tb_soc_gpio/dut_gpio_in[7:0]
+addSignal -h 15 -HEX /tb_soc_gpio/interface_gpio_in[7:0]
+addSignal -h 15 -HEX /tb_soc_gpio/uvm_vip_monitor_gpio_in[7:0]
+
+; --- GROUP 4: GPIO INTERRUPT & STATUS ---
+addGroup "GROUP 4: GPIO INTERRUPT & STATUS"
+addSignal -h 15 /tb_soc_gpio/dut_irq_gpio
+addSignal -h 15 /tb_soc_gpio/interface_irq_gpio
+addSignal -h 15 -HEX /tb_soc_gpio/internal_reg_irq_en[7:0]
+addSignal -h 15 /tb_soc_gpio/internal_reg_changed
+
+; --- GROUP 5: RISC-V CPU EXECUTION ---
+addGroup "GROUP 5: RISC-V CPU"
+addSignal -h 15 -HEX /tb_soc_gpio/dut/trace_rv_i_address_ip[31:0]
+addSignal -h 15 -HEX /tb_soc_gpio/dut/trace_rv_i_insn_ip[31:0]
+addSignal -h 15 /tb_soc_gpio/dut/trace_rv_i_valid_ip

@@ -19,9 +19,8 @@ class gpio_driver extends uvm_driver #(gpio_seq_item);
 
     virtual function void build_phase(uvm_phase phase);
         super.build_phase(phase);
-        if (!uvm_config_db#(virtual gpio_if)::get(this, "", "gpio_vif", vif) &&
-            !uvm_config_db#(virtual gpio_if)::get(this, "", "vif", vif)) begin
-            `uvm_fatal("NOVIF", {"Virtual interface must be set for: ", get_full_name(), ".vif (or gpio_vif)"})
+        if (!uvm_config_db#(virtual gpio_if)::get(this, "", "gpio_vif", vif)) begin
+            `uvm_fatal("NOVIF", {"Virtual interface must be set for: ", get_full_name(), ".gpio_vif"})
         end
         if (!uvm_config_db#(gpio_config)::get(this, "", "cfg", cfg)) begin
             `uvm_info("NOCFG", "Using default gpio_config in driver", UVM_MEDIUM)

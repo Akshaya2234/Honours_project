@@ -28,16 +28,13 @@ class spi_adc_agent extends uvm_agent;
             cfg = spi_adc_config::type_id::create("cfg");
         end
 
-        if (!uvm_config_db#(virtual spi_adc_if)::get(this, "", "spi_adc_vif", vif) &&
-            !uvm_config_db#(virtual spi_adc_if)::get(this, "", "vif", vif)) begin
-            `uvm_fatal("NOVIF", {"Virtual interface must be set for: ", get_full_name(), ".vif (or spi_adc_vif)"})
+        if (!uvm_config_db#(virtual spi_adc_if)::get(this, "", "spi_adc_vif", vif)) begin
+            `uvm_fatal("NOVIF", {"Virtual interface must be set for: ", get_full_name(), ".spi_adc_vif"})
         end
 
         uvm_config_db#(spi_adc_config)::set(this, "driver", "cfg", cfg);
         uvm_config_db#(spi_adc_config)::set(this, "monitor", "cfg", cfg);
-        uvm_config_db#(virtual spi_adc_if)::set(this, "driver", "vif", vif);
         uvm_config_db#(virtual spi_adc_if)::set(this, "driver", "spi_adc_vif", vif);
-        uvm_config_db#(virtual spi_adc_if)::set(this, "monitor", "vif", vif);
         uvm_config_db#(virtual spi_adc_if)::set(this, "monitor", "spi_adc_vif", vif);
 
         monitor = spi_adc_monitor::type_id::create("monitor", this);

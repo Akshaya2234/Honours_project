@@ -21,9 +21,8 @@ class timer_monitor extends uvm_monitor;
 
     virtual function void build_phase(uvm_phase phase);
         super.build_phase(phase);
-        if (!uvm_config_db#(virtual timer_if)::get(this, "", "timer_vif", vif) &&
-            !uvm_config_db#(virtual timer_if)::get(this, "", "vif", vif)) begin
-            `uvm_fatal("NOVIF", {"Virtual interface must be set for: ", get_full_name(), ".vif (or timer_vif)"})
+        if (!uvm_config_db#(virtual timer_if)::get(this, "", "timer_vif", vif)) begin
+            `uvm_fatal("NOVIF", {"Virtual interface must be set for: ", get_full_name(), ".timer_vif"})
         end
         if (!uvm_config_db#(timer_config)::get(this, "", "cfg", cfg)) begin
             cfg = timer_config::type_id::create("cfg");

@@ -28,16 +28,13 @@ class gpio_agent extends uvm_agent;
             cfg = gpio_config::type_id::create("cfg");
         end
 
-        if (!uvm_config_db#(virtual gpio_if)::get(this, "", "gpio_vif", vif) &&
-            !uvm_config_db#(virtual gpio_if)::get(this, "", "vif", vif)) begin
-            `uvm_fatal("NOVIF", {"Virtual interface must be set for: ", get_full_name(), ".vif (or gpio_vif)"})
+        if (!uvm_config_db#(virtual gpio_if)::get(this, "", "gpio_vif", vif)) begin
+            `uvm_fatal("NOVIF", {"Virtual interface must be set for: ", get_full_name(), ".gpio_vif"})
         end
 
         uvm_config_db#(gpio_config)::set(this, "driver", "cfg", cfg);
         uvm_config_db#(gpio_config)::set(this, "monitor", "cfg", cfg);
-        uvm_config_db#(virtual gpio_if)::set(this, "driver", "vif", vif);
         uvm_config_db#(virtual gpio_if)::set(this, "driver", "gpio_vif", vif);
-        uvm_config_db#(virtual gpio_if)::set(this, "monitor", "vif", vif);
         uvm_config_db#(virtual gpio_if)::set(this, "monitor", "gpio_vif", vif);
 
         monitor = gpio_monitor::type_id::create("monitor", this);

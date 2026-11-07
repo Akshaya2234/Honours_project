@@ -178,7 +178,7 @@ module tb_pwm_vip_test;
     end
 
     initial begin
-        uvm_config_db#(virtual pwm_if)::set(null, "*", "vif", u_pwm_if);
+        uvm_config_db#(virtual pwm_if)::set(null, "*", "pwm_vif", u_pwm_if);
         run_test("pwm_vip_sanity_test");
     end
 

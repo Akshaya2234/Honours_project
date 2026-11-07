@@ -198,7 +198,7 @@ module tb_spi_adc_vip_test;
     end
 
     initial begin
-        uvm_config_db#(virtual spi_adc_if)::set(null, "*", "vif", u_spi_if);
+        uvm_config_db#(virtual spi_adc_if)::set(null, "*", "spi_adc_vif", u_spi_if);
         run_test("spi_adc_vip_sanity_test");
     end
 

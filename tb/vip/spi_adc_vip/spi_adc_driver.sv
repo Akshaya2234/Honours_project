@@ -39,9 +39,8 @@ class spi_adc_driver extends uvm_driver #(spi_adc_seq_item);
 
     virtual function void build_phase(uvm_phase phase);
         super.build_phase(phase);
-        if (!uvm_config_db#(virtual spi_adc_if)::get(this, "", "spi_adc_vif", vif) &&
-            !uvm_config_db#(virtual spi_adc_if)::get(this, "", "vif", vif)) begin
-            `uvm_fatal("NOVIF", {"Virtual interface must be set for: ", get_full_name(), ".vif (or spi_adc_vif)"})
+        if (!uvm_config_db#(virtual spi_adc_if)::get(this, "", "spi_adc_vif", vif)) begin
+            `uvm_fatal("NOVIF", {"Virtual interface must be set for: ", get_full_name(), ".spi_adc_vif"})
         end
         if (!uvm_config_db#(spi_adc_config)::get(this, "", "cfg", cfg)) begin
             `uvm_info("NOCFG", "Using default spi_adc_config in driver", UVM_MEDIUM)

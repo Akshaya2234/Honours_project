@@ -192,7 +192,7 @@ module tb_gpio_vip_test;
     end
 
     initial begin
-        uvm_config_db#(virtual gpio_if)::set(null, "*", "vif", u_gpio_if);
+        uvm_config_db#(virtual gpio_if)::set(null, "*", "gpio_vif", u_gpio_if);
         run_test("gpio_vip_sanity_test");
     end
 

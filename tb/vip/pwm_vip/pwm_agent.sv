@@ -26,13 +26,11 @@ class pwm_agent extends uvm_agent;
             cfg = pwm_config::type_id::create("cfg");
         end
 
-        if (!uvm_config_db#(virtual pwm_if)::get(this, "", "pwm_vif", vif) &&
-            !uvm_config_db#(virtual pwm_if)::get(this, "", "vif", vif)) begin
-            `uvm_fatal("NOVIF", {"Virtual interface must be set for: ", get_full_name(), ".vif (or pwm_vif)"})
+        if (!uvm_config_db#(virtual pwm_if)::get(this, "", "pwm_vif", vif)) begin
+            `uvm_fatal("NOVIF", {"Virtual interface must be set for: ", get_full_name(), ".pwm_vif"})
         end
 
         uvm_config_db#(pwm_config)::set(this, "monitor", "cfg", cfg);
-        uvm_config_db#(virtual pwm_if)::set(this, "monitor", "vif", vif);
         uvm_config_db#(virtual pwm_if)::set(this, "monitor", "pwm_vif", vif);
 
         monitor = pwm_monitor::type_id::create("monitor", this);

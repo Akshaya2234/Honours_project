@@ -153,8 +153,32 @@ else ifeq ($(TEST), soc_uart)
     SIM_LOG     := sim_soc_uart.log
     WAVE_FILE   := dump_uart.fsdb
     RC_FILE     := soc_uart_signals.rc
+else ifeq ($(TEST), soc_gpio)
+    FILELIST    := filelist_soc_gpio.f
+    COMPILE_LOG := compile_soc_gpio.log
+    SIM_LOG     := sim_soc_gpio.log
+    WAVE_FILE   := dump_gpio.fsdb
+    RC_FILE     := soc_gpio_signals.rc
+else ifeq ($(TEST), soc_pwm)
+    FILELIST    := filelist_soc_pwm.f
+    COMPILE_LOG := compile_soc_pwm.log
+    SIM_LOG     := sim_soc_pwm.log
+    WAVE_FILE   := dump_pwm.fsdb
+    RC_FILE     := soc_pwm_signals.rc
+else ifeq ($(TEST), soc_timer)
+    FILELIST    := filelist_soc_timer.f
+    COMPILE_LOG := compile_soc_timer.log
+    SIM_LOG     := sim_soc_timer.log
+    WAVE_FILE   := dump_timer.fsdb
+    RC_FILE     := soc_timer_signals.rc
+else ifeq ($(TEST), soc_spi_adc)
+    FILELIST    := filelist_soc_spi_adc.f
+    COMPILE_LOG := compile_soc_spi_adc.log
+    SIM_LOG     := sim_soc_spi_adc.log
+    WAVE_FILE   := dump_spi_adc.fsdb
+    RC_FILE     := soc_spi_adc_signals.rc
 else
-    $(error Unknown TEST '$(TEST)'. Valid options are: uart, interconnect, timer, gpio, fir, sample_buffer, dma, vga, vga_live, watchdog, pipeline, soc, hello, c_uart, uart_vip, pwm_vip, gpio_vip, spi_adc_vip, timer_vip, soc_uart)
+    $(error Unknown TEST '$(TEST)'. Valid options are: uart, interconnect, timer, gpio, fir, sample_buffer, dma, vga, vga_live, watchdog, pipeline, soc, hello, c_uart, uart_vip, pwm_vip, gpio_vip, spi_adc_vip, timer_vip, soc_uart, soc_gpio, soc_pwm, soc_timer, soc_spi_adc)
 endif
 
 # Extra flags for tests with C++/DPI or external libraries
@@ -175,6 +199,14 @@ else ifeq ($(TEST), timer_vip)
     VCS_EXTRA_FLAGS := -ntb_opts uvm-1.2
 else ifeq ($(TEST), soc_uart)
     VCS_EXTRA_FLAGS := -ntb_opts uvm-1.2
+else ifeq ($(TEST), soc_gpio)
+    VCS_EXTRA_FLAGS := -ntb_opts uvm-1.2
+else ifeq ($(TEST), soc_pwm)
+    VCS_EXTRA_FLAGS := -ntb_opts uvm-1.2
+else ifeq ($(TEST), soc_timer)
+    VCS_EXTRA_FLAGS := -ntb_opts uvm-1.2
+else ifeq ($(TEST), soc_spi_adc)
+    VCS_EXTRA_FLAGS := -ntb_opts uvm-1.2
 endif
 
 # VCS Compilation and Simulation Flags
@@ -185,6 +217,11 @@ VERDI_BIN ?= $(VERDI_HOME)/bin/verdi
 .PHONY: all help compile sim run verdi wave clean \
         uart interconnect timer gpio fir sample_buffer dma vga vga-live vga-live-gui vga-live-verdi watchdog pipeline test-all \
         soc soc-compile soc-sim soc-verdi hello hello-verdi \
+        soc-uart soc-uart-compile soc-uart-sim soc-uart-verdi \
+        soc-gpio soc-gpio-compile soc-gpio-sim soc-gpio-verdi \
+        soc-pwm soc-pwm-compile soc-pwm-sim soc-pwm-verdi \
+        soc-timer soc-timer-compile soc-timer-sim soc-timer-verdi \
+        soc-spi-adc soc-spi-adc-compile soc-spi-adc-sim soc-spi-adc-verdi \
         uart-verdi interconnect-verdi timer-verdi gpio-verdi fir-verdi \
         sample_buffer-verdi dma-verdi vga-verdi watchdog-verdi pipeline-verdi
 
@@ -325,6 +362,58 @@ soc-uart-sim:
 
 soc-uart-verdi:
 	cd $(RUN_DIR) && ./view_soc_uart.sh &
+
+# Shortcut Targets for Single-IP GPIO SoC UVM Integration Test
+soc-gpio:
+	$(MAKE) run TEST=soc_gpio
+
+soc-gpio-compile:
+	$(MAKE) compile TEST=soc_gpio
+
+soc-gpio-sim:
+	$(MAKE) sim TEST=soc_gpio
+
+soc-gpio-verdi:
+	cd $(RUN_DIR) && ./view_soc_gpio.sh &
+
+# Shortcut Targets for Single-IP PWM SoC UVM Integration Test
+soc-pwm:
+	$(MAKE) run TEST=soc_pwm
+
+soc-pwm-compile:
+	$(MAKE) compile TEST=soc_pwm
+
+soc-pwm-sim:
+	$(MAKE) sim TEST=soc_pwm
+
+soc-pwm-verdi:
+	cd $(RUN_DIR) && ./view_soc_pwm.sh &
+
+# Shortcut Targets for Single-IP Timer SoC UVM Integration Test
+soc-timer:
+	$(MAKE) run TEST=soc_timer
+
+soc-timer-compile:
+	$(MAKE) compile TEST=soc_timer
+
+soc-timer-sim:
+	$(MAKE) sim TEST=soc_timer
+
+soc-timer-verdi:
+	cd $(RUN_DIR) && ./view_soc_timer.sh &
+
+# Shortcut Targets for Single-IP SPI ADC SoC UVM Integration Test
+soc-spi-adc:
+	$(MAKE) run TEST=soc_spi_adc
+
+soc-spi-adc-compile:
+	$(MAKE) compile TEST=soc_spi_adc
+
+soc-spi-adc-sim:
+	$(MAKE) sim TEST=soc_spi_adc
+
+soc-spi-adc-verdi:
+	cd $(RUN_DIR) && ./view_soc_spi_adc.sh &
 
 # Shortcut Targets for RISC-V C Firmware UART Test
 c_uart:

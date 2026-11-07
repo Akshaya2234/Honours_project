@@ -1,0 +1,41 @@
+; ==============================================================================
+; Verdi Signal List & Waveform Layout for Single-IP SPI ADC SoC UVM Integration
+; Project: RISC-V Smart Control SoC - Honours Project
+; Target : Real DUT (soc_top) + SPI ADC VIP Interface
+; ==============================================================================
+
+; --- GROUP 1: CLOCK AND RESET ---
+addGroup "GROUP 1: CLOCK AND RESET"
+addSignal -h 15 /tb_soc_spi_adc/clk
+addSignal -h 15 /tb_soc_spi_adc/rst_n
+
+; --- GROUP 2: 4-WIRE SPI BUS (DUT vs INTERFACE vs VIP MONITOR) ---
+addGroup "GROUP 2: SPI BUS (DUT vs INTERFACE vs VIP MONITOR)"
+addSignal -h 15 /tb_soc_spi_adc/dut_adc_spi_cs_n
+addSignal -h 15 /tb_soc_spi_adc/interface_adc_spi_cs_n
+addSignal -h 15 /tb_soc_spi_adc/uvm_vip_monitor_cs_n
+
+addSignal -h 15 /tb_soc_spi_adc/dut_adc_spi_sck
+addSignal -h 15 /tb_soc_spi_adc/interface_adc_spi_sck
+addSignal -h 15 /tb_soc_spi_adc/uvm_vip_monitor_sck
+
+addSignal -h 15 /tb_soc_spi_adc/dut_adc_spi_mosi
+addSignal -h 15 /tb_soc_spi_adc/interface_adc_spi_mosi
+
+addSignal -h 15 /tb_soc_spi_adc/dut_adc_spi_miso
+addSignal -h 15 /tb_soc_spi_adc/interface_adc_spi_miso
+addSignal -h 15 /tb_soc_spi_adc/uvm_vip_monitor_miso
+
+; --- GROUP 3: SPI CONTROLLER INTERNAL REGISTERS ---
+addGroup "GROUP 3: SPI CONTROLLER INTERNAL REGISTERS"
+addSignal -h 15 /tb_soc_spi_adc/internal_spi_en
+addSignal -h 15 /tb_soc_spi_adc/internal_spi_auto
+addSignal -h 15 /tb_soc_spi_adc/internal_spi_busy
+addSignal -h 15 -HEX /tb_soc_spi_adc/internal_spi_rxdata[15:0]
+addSignal -h 15 -UDEC /tb_soc_spi_adc/internal_spi_state[1:0]
+
+; --- GROUP 4: RISC-V CPU EXECUTION ---
+addGroup "GROUP 4: RISC-V CPU"
+addSignal -h 15 -HEX /tb_soc_spi_adc/dut/trace_rv_i_address_ip[31:0]
+addSignal -h 15 -HEX /tb_soc_spi_adc/dut/trace_rv_i_insn_ip[31:0]
+addSignal -h 15 /tb_soc_spi_adc/dut/trace_rv_i_valid_ip
