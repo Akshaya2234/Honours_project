@@ -1,0 +1,74 @@
+; ==============================================================================
+; Verdi Signal List & Waveform Layout for RISC-V SoC C UART Test (tb_c_uart)
+; ==============================================================================
+
+; --- Group 1: Clocks & Reset ---
+addGroup "1. Clocks & Reset"
+addSignal -h 15 /tb_c_uart/clk
+addSignal -h 15 /tb_c_uart/rst_n
+addSignal -h 15 /tb_c_uart/clk_vga
+
+; --- Group 2: RISC-V CPU Instruction Trace ---
+addGroup "2. CPU Trace & Execution"
+addSignal -h 15 -HEX /tb_c_uart/trace_rv_i_address_ip[31:0]
+addSignal -h 15 -HEX /tb_c_uart/trace_rv_i_insn_ip[31:0]
+addSignal -h 15 /tb_c_uart/trace_rv_i_valid_ip
+addSignal -h 15 /tb_c_uart/trace_rv_i_exception_ip
+addSignal -h 15 -HEX /tb_c_uart/trace_rv_i_ecause_ip[4:0]
+
+; --- Group 3: UART Physical Interface ---
+addGroup "3. UART Physical Interface"
+addSignal -h 15 /tb_c_uart/uart_tx
+addSignal -h 15 /tb_c_uart/uart_rx
+addSignal -h 15 /tb_c_uart/uart_irq
+
+; --- Group 4: CPU LSU 64-bit AXI Master ---
+addGroup "4. CPU LSU 64-bit AXI Master"
+addSignal -h 15 -HEX /tb_c_uart/dut/lsu_axi_awaddr[31:0]
+addSignal -h 15 /tb_c_uart/dut/lsu_axi_awvalid
+addSignal -h 15 /tb_c_uart/dut/lsu_axi_awready
+addSignal -h 15 -HEX /tb_c_uart/dut/lsu_axi_wdata[63:0]
+addSignal -h 15 -HEX /tb_c_uart/dut/lsu_axi_wstrb[7:0]
+addSignal -h 15 /tb_c_uart/dut/lsu_axi_wvalid
+addSignal -h 15 /tb_c_uart/dut/lsu_axi_wready
+addSignal -h 15 -HEX /tb_c_uart/dut/lsu_axi_bresp[1:0]
+addSignal -h 15 /tb_c_uart/dut/lsu_axi_bvalid
+addSignal -h 15 /tb_c_uart/dut/lsu_axi_bready
+addSignal -h 15 -HEX /tb_c_uart/dut/lsu_axi_araddr[31:0]
+addSignal -h 15 /tb_c_uart/dut/lsu_axi_arvalid
+addSignal -h 15 /tb_c_uart/dut/lsu_axi_arready
+addSignal -h 15 -HEX /tb_c_uart/dut/lsu_axi_rdata[63:0]
+addSignal -h 15 -HEX /tb_c_uart/dut/lsu_axi_rresp[1:0]
+addSignal -h 15 /tb_c_uart/dut/lsu_axi_rvalid
+addSignal -h 15 /tb_c_uart/dut/lsu_axi_rready
+
+; --- Group 5: Interconnect M00 -> UART Slave (32-bit AXI) ---
+addGroup "5. Interconnect M00 -> UART Slave"
+addSignal -h 15 -HEX /tb_c_uart/dut/u_interconnect_uart/m00_axi_awaddr[31:0]
+addSignal -h 15 /tb_c_uart/dut/u_interconnect_uart/m00_axi_awvalid
+addSignal -h 15 /tb_c_uart/dut/u_interconnect_uart/m00_axi_awready
+addSignal -h 15 -HEX /tb_c_uart/dut/u_interconnect_uart/m00_axi_wdata[31:0]
+addSignal -h 15 -HEX /tb_c_uart/dut/u_interconnect_uart/m00_axi_wstrb[3:0]
+addSignal -h 15 /tb_c_uart/dut/u_interconnect_uart/m00_axi_wvalid
+addSignal -h 15 /tb_c_uart/dut/u_interconnect_uart/m00_axi_wready
+addSignal -h 15 -HEX /tb_c_uart/dut/u_interconnect_uart/m00_axi_bresp[1:0]
+addSignal -h 15 /tb_c_uart/dut/u_interconnect_uart/m00_axi_bvalid
+addSignal -h 15 /tb_c_uart/dut/u_interconnect_uart/m00_axi_bready
+addSignal -h 15 -HEX /tb_c_uart/dut/u_interconnect_uart/m00_axi_araddr[31:0]
+addSignal -h 15 /tb_c_uart/dut/u_interconnect_uart/m00_axi_arvalid
+addSignal -h 15 /tb_c_uart/dut/u_interconnect_uart/m00_axi_arready
+addSignal -h 15 -HEX /tb_c_uart/dut/u_interconnect_uart/m00_axi_rdata[31:0]
+addSignal -h 15 -HEX /tb_c_uart/dut/u_interconnect_uart/m00_axi_rresp[1:0]
+addSignal -h 15 /tb_c_uart/dut/u_interconnect_uart/m00_axi_rvalid
+addSignal -h 15 /tb_c_uart/dut/u_interconnect_uart/m00_axi_rready
+
+; --- Group 6: UART Controller & Internal Registers ---
+addGroup "6. UART Internal Registers"
+addSignal -h 15 -HEX /tb_c_uart/dut/u_interconnect_uart/u_axi_uart/uart_baudrate_div_int[15:0]
+addSignal -h 15 -HEX /tb_c_uart/dut/u_interconnect_uart/u_axi_uart/uart_config_reg_int[31:0]
+addSignal -h 15 -HEX /tb_c_uart/dut/u_interconnect_uart/u_axi_uart/uart_lsr_reg_int[31:0]
+addSignal -h 15 /tb_c_uart/dut/u_interconnect_uart/u_axi_uart/write_state
+addSignal -h 15 /tb_c_uart/dut/u_interconnect_uart/u_axi_uart/read_state
+addSignal -h 15 /tb_c_uart/dut/u_interconnect_uart/u_axi_uart/tx_fifo_full_int
+addSignal -h 15 -HEX /tb_c_uart/dut/u_interconnect_uart/u_axi_uart/data_tx_fifo_controller[7:0]
+addSignal -h 15 /tb_c_uart/dut/u_interconnect_uart/u_axi_uart/push_controller_rx_fifo

@@ -111,14 +111,70 @@ else ifeq ($(TEST), hello)
     SIM_LOG     := sim_c_hello.log
     WAVE_FILE   := dump.fsdb
     RC_FILE     := 
+else ifeq ($(TEST), c_uart)
+    FILELIST    := filelist_c_uart.f
+    COMPILE_LOG := compile_c_uart.log
+    SIM_LOG     := sim_c_uart.log
+    WAVE_FILE   := dump.fsdb
+    RC_FILE     := c_uart_signals.rc
+else ifeq ($(TEST), uart_vip)
+    FILELIST    := filelist_uart_vip.f
+    COMPILE_LOG := compile_uart_vip.log
+    SIM_LOG     := sim_uart_vip.log
+    WAVE_FILE   := dump.fsdb
+    RC_FILE     := 
+else ifeq ($(TEST), pwm_vip)
+    FILELIST    := filelist_pwm_vip.f
+    COMPILE_LOG := compile_pwm_vip.log
+    SIM_LOG     := sim_pwm_vip.log
+    WAVE_FILE   := dump.fsdb
+    RC_FILE     := 
+else ifeq ($(TEST), gpio_vip)
+    FILELIST    := filelist_gpio_vip.f
+    COMPILE_LOG := compile_gpio_vip.log
+    SIM_LOG     := sim_gpio_vip.log
+    WAVE_FILE   := dump.fsdb
+    RC_FILE     := 
+else ifeq ($(TEST), spi_adc_vip)
+    FILELIST    := filelist_spi_adc_vip.f
+    COMPILE_LOG := compile_spi_adc_vip.log
+    SIM_LOG     := sim_spi_adc_vip.log
+    WAVE_FILE   := dump.fsdb
+    RC_FILE     := 
+else ifeq ($(TEST), timer_vip)
+    FILELIST    := filelist_timer_vip.f
+    COMPILE_LOG := compile_timer_vip.log
+    SIM_LOG     := sim_timer_vip.log
+    WAVE_FILE   := dump.fsdb
+    RC_FILE     := 
+else ifeq ($(TEST), soc_uart)
+    FILELIST    := filelist_soc_uart.f
+    COMPILE_LOG := compile_soc_uart.log
+    SIM_LOG     := sim_soc_uart.log
+    WAVE_FILE   := dump_uart.fsdb
+    RC_FILE     := soc_uart_signals.rc
 else
-    $(error Unknown TEST '$(TEST)'. Valid options are: uart, interconnect, timer, gpio, fir, sample_buffer, dma, vga, vga_live, watchdog, pipeline, soc, hello)
+    $(error Unknown TEST '$(TEST)'. Valid options are: uart, interconnect, timer, gpio, fir, sample_buffer, dma, vga, vga_live, watchdog, pipeline, soc, hello, c_uart, uart_vip, pwm_vip, gpio_vip, spi_adc_vip, timer_vip, soc_uart)
 endif
 
 # Extra flags for tests with C++/DPI or external libraries
 ifeq ($(TEST), vga_live)
     VCS_EXTRA_FLAGS := -CFLAGS "-std=c++11 -DENABLE_VGA_OPENGL -I$(ROOT_DIR)/tb/vga_simulator -I$(ROOT_DIR)/tb/vga_simulator/freeglut/include" \
                        -LDFLAGS "-Wl,--whole-archive $(ROOT_DIR)/tb/vga_simulator/freeglut/lib64/libglut.a -Wl,--no-whole-archive -lGLU -lGL -lX11 -lXrandr -lXxf86vm -lXi -lpthread"
+else ifeq ($(TEST), soc)
+    VCS_EXTRA_FLAGS := -ntb_opts uvm-1.2
+else ifeq ($(TEST), uart_vip)
+    VCS_EXTRA_FLAGS := -ntb_opts uvm-1.2
+else ifeq ($(TEST), pwm_vip)
+    VCS_EXTRA_FLAGS := -ntb_opts uvm-1.2
+else ifeq ($(TEST), gpio_vip)
+    VCS_EXTRA_FLAGS := -ntb_opts uvm-1.2
+else ifeq ($(TEST), spi_adc_vip)
+    VCS_EXTRA_FLAGS := -ntb_opts uvm-1.2
+else ifeq ($(TEST), timer_vip)
+    VCS_EXTRA_FLAGS := -ntb_opts uvm-1.2
+else ifeq ($(TEST), soc_uart)
+    VCS_EXTRA_FLAGS := -ntb_opts uvm-1.2
 endif
 
 # VCS Compilation and Simulation Flags
@@ -191,6 +247,51 @@ watchdog:
 uart:
 	$(MAKE) run TEST=uart
 
+uart-vip:
+	$(MAKE) run TEST=uart_vip
+
+uart-vip-compile:
+	$(MAKE) compile TEST=uart_vip
+
+uart-vip-sim:
+	$(MAKE) sim TEST=uart_vip
+
+pwm-vip:
+	$(MAKE) run TEST=pwm_vip
+
+pwm-vip-compile:
+	$(MAKE) compile TEST=pwm_vip
+
+pwm-vip-sim:
+	$(MAKE) sim TEST=pwm_vip
+
+gpio-vip:
+	$(MAKE) run TEST=gpio_vip
+
+gpio-vip-compile:
+	$(MAKE) compile TEST=gpio_vip
+
+gpio-vip-sim:
+	$(MAKE) sim TEST=gpio_vip
+
+spi-adc-vip:
+	$(MAKE) run TEST=spi_adc_vip
+
+spi-adc-vip-compile:
+	$(MAKE) compile TEST=spi_adc_vip
+
+spi-adc-vip-sim:
+	$(MAKE) sim TEST=spi_adc_vip
+
+timer-vip:
+	$(MAKE) run TEST=timer_vip
+
+timer-vip-compile:
+	$(MAKE) compile TEST=timer_vip
+
+timer-vip-sim:
+	$(MAKE) sim TEST=timer_vip
+
 interconnect:
 	$(MAKE) run TEST=interconnect
 
@@ -211,6 +312,34 @@ soc-sim:
 
 soc-verdi:
 	$(MAKE) verdi TEST=soc
+
+# Shortcut Targets for Single-IP UART SoC UVM Integration Test
+soc-uart:
+	$(MAKE) run TEST=soc_uart
+
+soc-uart-compile:
+	$(MAKE) compile TEST=soc_uart
+
+soc-uart-sim:
+	$(MAKE) sim TEST=soc_uart
+
+soc-uart-verdi:
+	cd $(RUN_DIR) && ./view_soc_uart.sh &
+
+# Shortcut Targets for RISC-V C Firmware UART Test
+c_uart:
+	cd c_testing && ./build.sh
+	$(MAKE) run TEST=c_uart
+
+c_uart-compile:
+	cd c_testing && ./build.sh
+	$(MAKE) compile TEST=c_uart
+
+c_uart-sim:
+	$(MAKE) sim TEST=c_uart
+
+c_uart-verdi:
+	$(MAKE) verdi TEST=c_uart
 
 # Shortcut Targets for RISC-V C Firmware Hello World
 hello:

@@ -28,6 +28,14 @@
 
 module tb_soc_top;
     import el2_pkg::*;
+    import uvm_pkg::*;
+    `include "uvm_macros.svh"
+    import uart_pkg::*;
+    import timer_pkg::*;
+    import gpio_pkg::*;
+    import pwm_pkg::*;
+    import spi_adc_pkg::*;
+    import soc_pkg::*;
 
     // -------------------------------------------------------------------------
     // Parameters
@@ -68,26 +76,34 @@ module tb_soc_top;
     logic [31:1]             nmi_vec;
     logic [31:1]             jtag_id;
 
-    logic                    uart_rx;
-    wire                     uart_tx;
-    wire                     uart_irq;
+    // -------------------------------------------------------------------------
+    // External VIP Interfaces Bound Directly to Internal SoC Peripheral IPs
+    // -------------------------------------------------------------------------
+    // 1. External UART VIP Interface -> Internal AXI UART IP (0x4000_6000)
+    uart_if    u_uart_vip_if    (.clk(clk), .rst_n(rst_n));
 
-    logic [7:0]              gpio_in;
-    wire [7:0]               gpio_out;
+    // 2. External GPIO VIP Interface -> Internal GPIO Controller IP (0x4000_A000)
+    gpio_if    u_gpio_vip_if    (.clk(clk), .rst_n(rst_n));
+    assign u_gpio_vip_if.irq_gpio = dut.irq_gpio;
 
-    wire                     adc_spi_sck;
-    wire                     adc_spi_mosi;
-    wire                     adc_spi_miso;
-    wire                     adc_spi_cs_n;
+    // 3. External PWM VIP Interface -> Internal PWM Controller IP (0x4000_2000)
+    pwm_if     u_pwm_vip_if     (.clk(clk), .rst_n(rst_n));
 
+    // 4. External SPI ADC VIP Interface -> Internal SPI Controller IP (0x4000_C000)
+    spi_adc_if u_spi_adc_vip_if (.clk(clk), .rst_n(rst_n));
+
+    // 5. External Timer VIP Interface -> Internal System Timer IP (0x4000_8000)
+    timer_if   u_timer_vip_if   (.clk(clk), .rst_n(rst_n));
+    assign u_timer_vip_if.sample_tick = dut.sample_tick;
+    assign u_timer_vip_if.irq_timer   = dut.irq_timer;
+
+    // VGA & Watchdog lines
     wire                     vga_hsync;
     wire                     vga_vsync;
     wire [3:0]               vga_red;
     wire [3:0]               vga_green;
     wire [3:0]               vga_blue;
-
     wire                     wdt_reset_out;
-    wire                     pwm_out;
 
     logic [23:0]             ext_irq;
     logic                    timer_int;
@@ -139,17 +155,17 @@ module tb_soc_top;
         .nmi_vec             (nmi_vec),
         .jtag_id             (jtag_id),
 
-        .uart_rx             (uart_rx),
-        .uart_tx             (uart_tx),
-        .uart_irq            (uart_irq),
+        .uart_rx             (u_uart_vip_if.uart_rx),
+        .uart_tx             (u_uart_vip_if.uart_tx),
+        .uart_irq            (u_uart_vip_if.uart_irq),
 
-        .gpio_in             (gpio_in),
-        .gpio_out            (gpio_out),
+        .gpio_in             (u_gpio_vip_if.gpio_in),
+        .gpio_out            (u_gpio_vip_if.gpio_out),
 
-        .adc_spi_sck         (adc_spi_sck),
-        .adc_spi_mosi        (adc_spi_mosi),
-        .adc_spi_miso        (adc_spi_miso),
-        .adc_spi_cs_n        (adc_spi_cs_n),
+        .adc_spi_sck         (u_spi_adc_vip_if.adc_spi_sck),
+        .adc_spi_mosi        (u_spi_adc_vip_if.adc_spi_mosi),
+        .adc_spi_miso        (u_spi_adc_vip_if.adc_spi_miso),
+        .adc_spi_cs_n        (u_spi_adc_vip_if.adc_spi_cs_n),
 
         .vga_hsync           (vga_hsync),
         .vga_vsync           (vga_vsync),
@@ -158,7 +174,7 @@ module tb_soc_top;
         .vga_blue            (vga_blue),
 
         .wdt_reset_out       (wdt_reset_out),
-       .pwm_out             (pwm_out),
+        .pwm_out             (u_pwm_vip_if.pwm_out),
  
         .ext_irq             (ext_irq),
         .timer_int           (timer_int),
@@ -183,19 +199,44 @@ module tb_soc_top;
         .DEFAULT_PATTERN     (0),          // Sine wave
         .SAMPLE_AMPLITUDE    (16'sd16000)
     ) u_adc_model (
-        .adc_spi_sck         (adc_spi_sck),
-        .adc_spi_miso        (adc_spi_miso),
-        .adc_spi_mosi        (adc_spi_mosi),
-        .adc_spi_cs_n        (adc_spi_cs_n)
+        .adc_spi_sck         (u_spi_adc_vip_if.adc_spi_sck),
+        .adc_spi_miso        (u_spi_adc_vip_if.adc_spi_miso),
+        .adc_spi_mosi        (u_spi_adc_vip_if.adc_spi_mosi),
+        .adc_spi_cs_n        (u_spi_adc_vip_if.adc_spi_cs_n)
     );
+
+    // -------------------------------------------------------------------------
+    // UVM Config DB Registrations & Test Execution (All 5 Project VIPs)
+    // -------------------------------------------------------------------------
+    initial begin
+        // 1. UART Virtual Interface
+        uvm_config_db#(virtual uart_if)::set(null, "*", "uart_vif", u_uart_vip_if);
+        uvm_config_db#(virtual uart_if)::set(null, "*", "vif", u_uart_vip_if);
+
+        // 2. Timer Virtual Interface
+        uvm_config_db#(virtual timer_if)::set(null, "*", "timer_vif", u_timer_vip_if);
+        uvm_config_db#(virtual timer_if)::set(null, "*", "vif", u_timer_vip_if);
+
+        // 3. GPIO / 7-Segment Virtual Interface
+        uvm_config_db#(virtual gpio_if)::set(null, "*", "gpio_vif", u_gpio_vip_if);
+        uvm_config_db#(virtual gpio_if)::set(null, "*", "vif", u_gpio_vip_if);
+
+        // 4. PWM Virtual Interface
+        uvm_config_db#(virtual pwm_if)::set(null, "*", "pwm_vif", u_pwm_vip_if);
+        uvm_config_db#(virtual pwm_if)::set(null, "*", "vif", u_pwm_vip_if);
+
+        // 5. SPI ADC Virtual Interface
+        uvm_config_db#(virtual spi_adc_if)::set(null, "*", "spi_adc_vif", u_spi_adc_vip_if);
+        uvm_config_db#(virtual spi_adc_if)::set(null, "*", "vif", u_spi_adc_vip_if);
+
+        // Run the top-level UVM test (launches UVM phases concurrently with SoC stimulus)
+        run_test("soc_test");
+    end
 
     // -------------------------------------------------------------------------
     // Verdi Waveform Dumping (FSDB)
     // -------------------------------------------------------------------------
-        initial begin
-    logic [7:0] captured_uart_byte;
-    integer pwm_high_samples;
-    integer pwm_low_samples;
+    initial begin
         $fsdbDumpfile("dump.fsdb");
         $fsdbDumpvars(0, tb_soc_top, "+all");
         $fsdbDumpSVA;
@@ -236,7 +277,7 @@ module tb_soc_top;
         int elapsed_ns = 0;
         rx_byte = 8'h00;
 
-        while (uart_tx !== 1'b0 && elapsed_ns < timeout_ns) begin
+        while (u_uart_vip_if.uart_tx !== 1'b0 && elapsed_ns < timeout_ns) begin
             #10;
             elapsed_ns += 10;
         end
@@ -250,27 +291,27 @@ module tb_soc_top;
 
         for (int i = 0; i < 8; i++) begin
             #BIT_PERIOD_NS;
-            rx_byte[i] = uart_tx;
+            rx_byte[i] = u_uart_vip_if.uart_tx;
         end
 
         #BIT_PERIOD_NS;
-        if (uart_tx !== 1'b1) begin
-            $error("[UART FRAME ERROR] Stop bit not high on uart_tx! Observed: %b", uart_tx);
+        if (u_uart_vip_if.uart_tx !== 1'b1) begin
+            $error("[UART FRAME ERROR] Stop bit not high on uart_tx! Observed: %b", u_uart_vip_if.uart_tx);
         end
     endtask
 
     task automatic transmit_uart_byte(input logic [7:0] tx_byte);
         int bit_cycles = UART_BAUD_DIV + 1;
         @(posedge clk);
-        uart_rx <= 1'b0; // Start bit
+        u_uart_vip_if.uart_rx <= 1'b0; // Start bit
         repeat (bit_cycles) @(posedge clk);
 
         for (int i = 0; i < 8; i++) begin
-            uart_rx <= tx_byte[i];
+            u_uart_vip_if.uart_rx <= tx_byte[i];
             repeat (bit_cycles) @(posedge clk);
         end
 
-        uart_rx <= 1'b1; // Stop bit
+        u_uart_vip_if.uart_rx <= 1'b1; // Stop bit
         repeat (bit_cycles) @(posedge clk);
     endtask
 
@@ -392,6 +433,8 @@ module tb_soc_top;
     // -------------------------------------------------------------------------
     initial begin
         logic [7:0] captured_uart_byte;
+        integer pwm_high_samples;
+        integer pwm_low_samples;
 
         $display("\n==================================================================");
         $display("   STARTING RISC-V SoC TOP LEVEL INTEGRATION SUITE (Synopsys VCS) ");
@@ -404,9 +447,9 @@ module tb_soc_top;
         // TEST 1: Power-On Reset & Static Initialization
         // ---------------------------------------------------------------------
         $display("\n--- [TEST 1] Power-On Reset & Initialization ---");
-        rst_n       = 1'b0;
-        uart_rx     = 1'b1;
-        gpio_in     = 8'h3C;
+        rst_n                 = 1'b0;
+        u_uart_vip_if.uart_rx = 1'b1;
+        u_gpio_vip_if.gpio_in = 8'h3C;
         ext_irq     = '0;
         timer_int   = 1'b0;
         nmi_int     = 1'b0;
@@ -417,7 +460,7 @@ module tb_soc_top;
 
         #(CLK_SYS_PERIOD_NS * 10);
         check("Test 1.1: Reset asserted, CPU halt status inactive", (o_cpu_halt_status == 1'b0));
-        check("Test 1.2: UART Tx idle high during reset", (uart_tx == 1'b1));
+        check("Test 1.2: UART Tx idle high during reset", (u_uart_vip_if.uart_tx == 1'b1));
         check("Test 1.3: Watchdog reset out inactive", (wdt_reset_out == 1'b0));
 
         // Release reset
@@ -461,9 +504,9 @@ module tb_soc_top;
 
         repeat (100) begin
             @(posedge clk);
-            if (pwm_out === 1'b1)
+            if (u_pwm_vip_if.pwm_out === 1'b1)
                 pwm_high_samples++;
-            else if (pwm_out === 1'b0)
+            else if (u_pwm_vip_if.pwm_out === 1'b0)
                 pwm_low_samples++;
         end
 
@@ -483,10 +526,10 @@ module tb_soc_top;
         // ---------------------------------------------------------------------
         $display("\n--- [TEST 4] GPIO Controller Software Verification ---");
         #(CLK_SYS_PERIOD_NS * 50);
-        $display("   Observed gpio_out = 0x%02h (Expected: 0xA5)", gpio_out);
+        $display("   Observed gpio_out = 0x%02h (Expected: 0xA5)", u_gpio_vip_if.gpio_out);
         check("Test 4.1: Core software wrote 0xA5 to GPIO outputs",
-              (gpio_out == 8'hA5),
-              $sformatf("Expected 0xA5, got 0x%02h", gpio_out));
+              (u_gpio_vip_if.gpio_out == 8'hA5),
+              $sformatf("Expected 0xA5, got 0x%02h", u_gpio_vip_if.gpio_out));
 
         // ---------------------------------------------------------------------
         // TEST 5: VGA Controller Software UI Customization
@@ -521,12 +564,12 @@ module tb_soc_top;
 
         begin : wait_for_rx_irq
             int timeout = 50_000;
-            while (!uart_irq && timeout > 0) begin
+            while (!u_uart_vip_if.uart_irq && timeout > 0) begin
                 @(posedge clk);
                 timeout--;
             end
             check("Test 7.1: UART RX generated interrupt on uart_irq",
-                  (uart_irq == 1'b1),
+                  (u_uart_vip_if.uart_irq == 1'b1),
                   "uart_irq failed to assert after serial reception");
         end
 
@@ -657,14 +700,19 @@ module tb_soc_top;
         $display("   Total Instructions Retired: %0d", retired_instructions);
         $display("------------------------------------------------------------------");
 
-        if (test_fail_count == 0) begin
-            $display("   >>> ALL RISC-V SoC INTEGRATION TESTS PASSED! <<<   ");
-            $display("==================================================================\n");
-            $finish(0);
-        end else begin
-            $display("   *** SOME TESTS FAILED! Check simulation logs. ***  ");
-            $display("==================================================================\n");
-            $finish(1);
+        begin
+            uvm_event done_ev;
+            done_ev = uvm_event_pool::get_global("soc_test_done");
+            if (test_fail_count == 0) begin
+                $display("   >>> ALL RISC-V SoC INTEGRATION TESTS PASSED! <<<   ");
+                $display("==================================================================\n");
+                done_ev.trigger();
+            end else begin
+                $display("   *** SOME TESTS FAILED! Check simulation logs. ***  ");
+                $display("==================================================================\n");
+                `uvm_error("SOC_TEST_FAIL", $sformatf("%0d assertion(s) failed during SoC integration!", test_fail_count))
+                done_ev.trigger();
+            end
         end
     end
 

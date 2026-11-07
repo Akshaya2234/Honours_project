@@ -3,9 +3,27 @@
 +incdir+../rtl/veer_el2/design/lib
 +incdir+../rtl/axi_uart/include
 +incdir+../rtl/axi_uart/rtl
++incdir+../tb
++incdir+../tb/vip/uart_vip
++incdir+../tb/vip/timer_vip
++incdir+../tb/vip/gpio_vip
++incdir+../tb/vip/pwm_vip
++incdir+../tb/vip/spi_adc_vip
 
 -top tb_soc_top
 
+// =============================================================================
+// 1. Interface Definitions
+// =============================================================================
+../tb/vip/uart_vip/uart_if.sv
+../tb/vip/timer_vip/timer_if.sv
+../tb/vip/gpio_vip/gpio_if.sv
+../tb/vip/pwm_vip/pwm_if.sv
+../tb/vip/spi_adc_vip/spi_adc_if.sv
+
+// =============================================================================
+// 2. RTL Modules (VeeR EL2 Core, Interconnect, Memory & Peripherals)
+// =============================================================================
 ../rtl/veer_el2/snapshots/default/common_defines.vh
 ../rtl/veer_el2/design/include/el2_def.sv
 -v ../rtl/veer_el2/design/lib/mem_lib.sv
@@ -98,7 +116,24 @@
 
 ../rtl/interconnect/axi_adapter_64_to_32.sv
 ../rtl/soc_top.sv
+../rtl/pwm/pwm.sv
 
+// =============================================================================
+// 3. UVM Packages & VIP Components
+// =============================================================================
+../tb/vip/uart_vip/uart_pkg.sv
+../tb/vip/timer_vip/timer_pkg.sv
+../tb/vip/gpio_vip/gpio_pkg.sv
+../tb/vip/pwm_vip/pwm_pkg.sv
+../tb/vip/spi_adc_vip/spi_adc_pkg.sv
+
+// =============================================================================
+// 4. SoC Top UVM Environment and Test Classes
+// =============================================================================
+../tb/soc_pkg.sv
+
+// =============================================================================
+// 5. Testbench Top & Behavioral Models
+// =============================================================================
 ../tb/adc_model.sv
 ../tb/tb_soc_top.sv
-../rtl/pwm/pwm.sv

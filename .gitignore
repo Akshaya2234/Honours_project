@@ -4,7 +4,8 @@ compile.log
 run/*
 !run/*.sh
 !run/*.f
-!run/uart_signals.rc
+!run/*.rc
+!run/*.cmd
 simv*
 csrc/
 *.daidir/
@@ -23,7 +24,7 @@ vc_hdrs.h
 **/*.wlf
 **/*.key
 **/*.rc
-!run/uart_signals.rc
+!run/*.rc
 **/*.conf
 **/novas*
 **/verdiLog/

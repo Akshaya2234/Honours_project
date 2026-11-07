@@ -71,6 +71,7 @@ module tb_soc_c_hello;
     wire [3:0]               vga_blue;
 
     wire                     wdt_reset_out;
+    wire                     pwm_out;
 
     logic [23:0]             ext_irq;
     logic                    timer_int;
@@ -134,6 +135,7 @@ module tb_soc_c_hello;
         .vga_blue            (vga_blue),
 
         .wdt_reset_out       (wdt_reset_out),
+        .pwm_out             (pwm_out),
 
         .ext_irq             (ext_irq),
         .timer_int           (timer_int),
@@ -235,14 +237,14 @@ module tb_soc_c_hello;
         // Capture incoming serial stream from UART TX line
         fork
             begin : uart_receiver
-                while (char_count < 155) begin
+                while (char_count < 203) begin
                     receive_uart_byte(rx_char);
                     $write("%c", rx_char);
                     char_count++;
                 end
             end
             begin : simulation_timeout
-                #10_000_000; // 10ms timeout
+                #100_000_000; // 100ms timeout (generous for full banner at baud_div=16)
                 $error("\n[TIMEOUT] C firmware execution timed out without completing output!");
                 $finish(1);
             end

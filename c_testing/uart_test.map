@@ -1,0 +1,66 @@
+
+Merging object attributes
+
+
+There are no discarded input sections
+
+Memory Configuration
+
+Name             Origin             Length             Attributes
+IMEM             0x10000000         0x00010000         xr
+DMEM             0x10020000         0x00010000         xrw
+*default*        0x00000000         0xffffffff
+
+Linker script and memory map
+
+LOAD /tmp/ccxs4LwJ.o
+LOAD /tmp/cc7fH27x.o
+
+.text           0x10000000       0xd2
+ *(.text.start)
+ .text.start    0x10000000       0x1c /tmp/ccxs4LwJ.o
+                0x10000000                _start
+ *(.text*)
+ .text          0x1000001c        0x0 /tmp/ccxs4LwJ.o
+ .text          0x1000001c       0x1e /tmp/cc7fH27x.o
+ .text.startup  0x1000003a       0x2c /tmp/cc7fH27x.o
+                0x1000003a                main
+ *(.rodata*)
+ *fill*         0x10000066        0x2 
+ .rodata.str1.4
+                0x10000068       0x6a /tmp/cc7fH27x.o
+
+.rela.dyn       0x100000d4        0x0
+ .rela.text.start
+                0x100000d4        0x0 /tmp/ccxs4LwJ.o
+
+.data           0x10020000        0x0 load address 0x100000d2
+ *(.data*)
+ .data          0x10020000        0x0 /tmp/ccxs4LwJ.o
+ .data          0x10020000        0x0 /tmp/cc7fH27x.o
+ *(.sdata*)
+
+.bss            0x10020000        0x0 load address 0x100000d2
+ *(.bss*)
+ .bss           0x10020000        0x0 /tmp/ccxs4LwJ.o
+ .bss           0x10020000        0x0 /tmp/cc7fH27x.o
+ *(.sbss*)
+ *(COMMON)
+                0x1002fff0                        __stack_top = ((ORIGIN (DMEM) + LENGTH (DMEM)) - 0x10)
+OUTPUT(/home/student/Documents/1602-23-735-132/cbp/honours_project_soc-main/c_testing/uart_test.elf elf32-littleriscv)
+
+.riscv.attributes
+                0x00000000       0x43
+ .riscv.attributes
+                0x00000000       0x41 /tmp/ccxs4LwJ.o
+ .riscv.attributes
+                0x00000041       0x3f /tmp/cc7fH27x.o
+
+.comment        0x00000000       0x4a
+ .comment       0x00000000       0x4a /tmp/cc7fH27x.o
+                                 0x4b (size before relaxing)
+
+.note.GNU-stack
+                0x00000000        0x0
+ .note.GNU-stack
+                0x00000000        0x0 /tmp/cc7fH27x.o

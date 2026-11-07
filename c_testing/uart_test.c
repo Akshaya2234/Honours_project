@@ -3,18 +3,16 @@
 #define UART_BASE  0x40006000U
 
 #define UART_THR   (*(volatile uint32_t *)(UART_BASE + 0x00))
+#define UART_IER   (*(volatile uint32_t *)(UART_BASE + 0x04))
 #define UART_DIV   (*(volatile uint32_t *)(UART_BASE + 0x08))
 #define UART_LCR   (*(volatile uint32_t *)(UART_BASE + 0x0C))
 #define UART_LSR   (*(volatile uint32_t *)(UART_BASE + 0x14))
 
-#define UART_DLAB  0x80U
 #define UART_8N1   0x03U
 #define UART_THRE  (1U << 5)
 
 static void uart_init(void)
 {
-    UART_LCR = UART_DLAB;
-    UART_DIV = 868U;
     UART_LCR = UART_8N1;
 }
 
@@ -24,7 +22,7 @@ static void uart_putc(char c)
         /* Wait until transmitter is ready */
     }
 
-    UART_THR = (uint32_t)c;
+    UART_THR = (uint32_t)(uint8_t)c;
 }
 
 static void uart_puts(const char *str)

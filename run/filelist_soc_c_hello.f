@@ -83,6 +83,7 @@
 
 ../rtl/timer/timer.sv
 ../rtl/gpio/gpio.sv
+../rtl/pwm/pwm.sv
 ../rtl/spi_controller/spi_controller.sv
 ../rtl/watchdog/watchdog.sv
 ../rtl/fir_filter/fir_filter.sv

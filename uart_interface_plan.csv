@@ -1,0 +1,45 @@
+# ==============================================================================
+# RISC-V Smart Control SoC - UART External Interface Specification
+# Reference: RISC_V_Smart_Control_SoC_Test_Plan(2).xlsx (Item 5)
+# Peripheral Base Address: 0x4000_6000 | Interconnect: AXI4-Lite Slave
+# Target VIP: uart_vip (tb/vip/uart_vip/uart_if.sv)
+# ==============================================================================
+
+# --- SECTION 1: PHYSICAL BOUNDARY SIGNALS ---
+Section,Signal_Name,Direction_VIP,Direction_DUT,Bit_Width,Clock_Domain,Reset_Domain,Active_Level,DUT_Port,VIP_Interface_Port,Description
+PINOUT,uart_rx,OUTPUT,INPUT,1,clk (100MHz),rst_n,Active-Low Start/High Idle,dut.uart_rx,u_uart_vip_if.uart_rx,Serial asynchronous bitstream driven into SoC UART receiver by VIP driver
+PINOUT,uart_tx,INPUT,OUTPUT,1,clk (100MHz),rst_n,Active-Low Start/High Idle,dut.uart_tx,u_uart_vip_if.uart_tx,Serial asynchronous bitstream transmitted from SoC UART transmitter monitored by VIP
+PINOUT,uart_irq,INPUT,OUTPUT,1,clk (100MHz),rst_n,Active-High,dut.uart_irq,u_uart_vip_if.uart_irq,UART receiver buffer interrupt line routed to VeeR PIC IRQ source 0
+PINOUT,clk,INPUT,INPUT,1,clk,None,Rising-Edge,dut.clk,u_uart_vip_if.clk,SoC system clock (100 MHz / 10 ns period)
+PINOUT,rst_n,INPUT,INPUT,1,clk,None,Active-Low,dut.rst_n,u_uart_vip_if.rst_n,Asynchronous active-low system reset
+
+# --- SECTION 2: MEMORY-MAPPED REGISTERS (BASE: 0x4000_6000) ---
+Section,Register_Name,Offset,Access_Type,Reset_Value,Bitfield,Field_Name,Field_Description
+REG_SPEC,UART_RBR,0x00,RO,0x00000000,[7:0],rbr,Receiver Buffer Register: oldest received byte in RX FIFO
+REG_SPEC,UART_THR,0x00,WO,0x00000000,[7:0],thr,Transmitter Holding Register: writes byte into TX FIFO for transmission
+REG_SPEC,UART_IER,0x04,RW,0x00000000,[0],erbfi,Enable Received Data Available Interrupt (1 = Assert uart_irq on RX data)
+REG_SPEC,UART_BAUD_DIVISOR,0x08,RW,0x00000364,[15:0],baud_div,Custom baud rate divisor (Default: 868 for 115200 baud at 100MHz)
+REG_SPEC,UART_LCR,0x0C,RW,0x00000003,[1:0],wls,Word Length Select (11 = 8 data bits)
+REG_SPEC,UART_LCR,0x0C,RW,0x00000003,[2],stb,Stop Bits (0 = 1 stop bit, 1 = 2 stop bits)
+REG_SPEC,UART_LCR,0x0C,RW,0x00000003,[3],pen,Parity Enable (0 = Disabled / No Parity, 1 = Enabled)
+REG_SPEC,UART_LCR,0x0C,RW,0x00000003,[4],eps,Even Parity Select (0 = Odd parity, 1 = Even parity)
+REG_SPEC,UART_LSR,0x14,RO,0x00000060,[0],dr,Data Ready flag: 1 when unread characters are present in RX FIFO
+REG_SPEC,UART_LSR,0x14,RO,0x00000060,[5],thre,Transmitter Holding Register Empty: 1 when TX FIFO can accept new data
+REG_SPEC,UART_LSR,0x14,RO,0x00000060,[6],temt,Transmitter Empty: 1 when both TX FIFO and shift register are empty
+
+# --- SECTION 3: PROTOCOL TIMING & FRAMING SPECIFICATIONS ---
+Section,Parameter_Name,Calculation_Formula,Nominal_Test_Value,Units,Description
+TIMING_SPEC,Baud_Rate,Baud = F_clk / Divisor,115200,bps,Standard serial transmission speed
+TIMING_SPEC,Baud_Divisor,Divisor = 100MHz / 115200,868,cycles,Clock cycles per serial bit period
+TIMING_SPEC,Bit_Period,T_bit = Divisor * 10ns,8680,ns,Duration of one serial bit on uart_tx / uart_rx
+TIMING_SPEC,Framing_Format,Start + 8 Data + None + 1 Stop,8-N-1,mode,Standard UART framing format without parity
+TIMING_SPEC,Character_Duration,T_char = 10 * T_bit,86.8,us,Total time to transfer one complete 10-bit serial frame
+
+# --- SECTION 4: VERIFICATION SCENARIOS & CHECKPOINTS (TEST PLAN ITEM 5) ---
+Section,Test_ID,Category,Test_Scenario,Stimulus_Applied,Expected_VIP_Observation,Pass_Criteria,Test_Plan_Ref,Execution_Status
+VPLAN,TEST_UART_01,UART Communication,Reset State Check,Assert system reset (rst_n=0),uart_tx remains HIGH (idle mark state),TX line idle HIGH with no spurious start bits,Test Plan Item 1 & 5,PASSED
+VPLAN,TEST_UART_02,UART Communication,TX Frame Transmission,CPU writes 'A' (0x41) to UART_THR (0x4000_6000),VIP monitor detects start bit and captures 0x41,Captured byte matches 0x41 with valid stop bit,Test Plan Item 5,PASSED
+VPLAN,TEST_UART_03,UART Communication,RX Frame Reception,VIP driver transmits 0x5A to uart_rx at 115200 baud,RX FIFO latches 0x5A; UART_LSR[0] becomes 1,CPU reads UART_RBR and receives exactly 0x5A,Test Plan Item 5,PASSED
+VPLAN,TEST_UART_04,UART Communication,RX Buffer Interrupt Assertion,Write UART_IER=0x01 then VIP drives 0x5A to uart_rx,u_uart_vip_if.uart_irq asserts HIGH,uart_irq == 1 and reaches PIC interrupt line 0,Test Plan Item 5 & 10,PASSED
+VPLAN,TEST_UART_05,UART Communication,RX Interrupt Deassertion,CPU reads UART_RBR to empty the RX FIFO,u_uart_vip_if.uart_irq deasserts back to LOW,uart_irq clears to 0 upon reading RBR,Test Plan Item 5 & 10,PASSED
+VPLAN,TEST_UART_06,UART Communication,Multi-Character String Stream,CPU sends string "HELLO RISC-V SOC",VIP monitor captures all 16 consecutive frames,Zero framing or framing parity errors observed,Test Plan Item 5,PASSED

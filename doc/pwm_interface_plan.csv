@@ -1,0 +1,39 @@
+# ==============================================================================
+# RISC-V Smart Control SoC - PWM Controller External Interface Specification
+# Reference: RISC_V_Smart_Control_SoC_Test_Plan(2).xlsx (Item 6)
+# Peripheral Base Address: 0x4000_2000 | Interconnect: AXI4-Lite Slave
+# Target VIP: pwm_vip (tb/vip/pwm_vip/pwm_if.sv)
+# ==============================================================================
+
+# --- SECTION 1: PHYSICAL BOUNDARY SIGNALS ---
+Section,Signal_Name,Direction_VIP,Direction_DUT,Bit_Width,Clock_Domain,Reset_Domain,Active_Level,DUT_Port,VIP_Interface_Port,Description
+PINOUT,pwm_out,INPUT,OUTPUT,1,clk (100MHz),rst_n,Active-High,dut.pwm_out,u_pwm_vip_if.pwm_out,PWM pulse train output from SoC to external motor/LED load monitored by VIP
+PINOUT,clk,INPUT,INPUT,1,clk,None,Rising-Edge,dut.clk,u_pwm_vip_if.clk,SoC system clock (100 MHz / 10 ns period)
+PINOUT,rst_n,INPUT,INPUT,1,clk,None,Active-Low,dut.rst_n,u_pwm_vip_if.rst_n,Asynchronous active-low system reset
+
+# --- SECTION 2: MEMORY-MAPPED REGISTERS (BASE: 0x4000_2000) ---
+Section,Register_Name,Offset,Access_Type,Reset_Value,Bitfield,Field_Name,Field_Description
+REG_SPEC,PWM_ENABLE,0x00,RW,0x00000000,[0],pwm_en,PWM Generator enable bit (1 = Active running, 0 = Stopped/IDLE LOW)
+REG_SPEC,PWM_PERIOD,0x04,RW,0x00000000,[31:0],pwm_period,Total cycle period in system clock cycles (T_period = period * 10ns)
+REG_SPEC,PWM_DUTY,0x08,RW,0x00000000,[31:0],pwm_duty,High pulse duration in system clock cycles (T_high = duty * 10ns)
+REG_SPEC,PWM_COUNT,0x0C,RO,0x00000000,[31:0],pwm_count,Real-time running cycle counter value (0 <= count < period)
+
+# --- SECTION 3: WAVEFORM TIMING & CALCULATION SPECIFICATIONS ---
+Section,Parameter_Name,Calculation_Formula,Nominal_Test_Value,Units,Description
+TIMING_SPEC,Clock_Period,T_clk = 1 / Frequency,10,ns,System clock period at 100 MHz
+TIMING_SPEC,PWM_Period_Time,T_period = pwm_period * T_clk,100,ns,Duration of one complete PWM waveform cycle (10 cycles)
+TIMING_SPEC,PWM_High_Duration,T_high = pwm_duty * T_clk,50,ns,Duration per cycle where pwm_out is driven HIGH (5 cycles)
+TIMING_SPEC,PWM_Low_Duration,T_low = (pwm_period - pwm_duty) * T_clk,50,ns,Duration per cycle where pwm_out is driven LOW (5 cycles)
+TIMING_SPEC,Duty_Cycle_Percentage,Duty(%) = (pwm_duty / pwm_period) * 100,50.0,%,Nominal duty cycle percentage verified by VIP monitor
+TIMING_SPEC,Modulo_Counter_Limit,count_max = pwm_period - 1,9,cycles,Counter resets to 0 upon reaching pwm_period - 1
+
+# --- SECTION 4: VERIFICATION SCENARIOS & CHECKPOINTS (TEST PLAN ITEM 6) ---
+Section,Test_ID,Category,Test_Scenario,Stimulus_Applied,Expected_VIP_Observation,Pass_Criteria,Test_Plan_Ref,Execution_Status
+VPLAN,TEST_PWM_01,PWM Functionality,Reset State Check,Assert system reset (rst_n=0),u_pwm_vip_if.pwm_out remains strictly LOW,Output 0 with no glitches during reset,Test Plan Item 1 & 6,PASSED
+VPLAN,TEST_PWM_02,PWM Functionality,Disabled State Check,Write period=10 duty=5 enable=0 to 0x4000_2000,u_pwm_vip_if.pwm_out remains 0 continuously,No pulse generation while pwm_en=0,Test Plan Item 6,PASSED
+VPLAN,TEST_PWM_03,PWM Functionality,50% Duty Cycle Waveform,Write period=10 duty=5 enable=1,VIP monitor captures Period=10 High=5 Low=5 cycles,Duty cycle measured at 50.00% (+/- 0% jitter),Test Plan Item 6,PASSED
+VPLAN,TEST_PWM_04,PWM Functionality,25% Duty Cycle Waveform,Write period=100 duty=25 enable=1,VIP monitor captures High=25 Low=75 cycles,Duty cycle measured at 25.00%,Test Plan Item 6,PASSED
+VPLAN,TEST_PWM_05,PWM Functionality,75% Duty Cycle Waveform,Write period=100 duty=75 enable=1,VIP monitor captures High=75 Low=25 cycles,Duty cycle measured at 75.00%,Test Plan Item 6,PASSED
+VPLAN,TEST_PWM_06,PWM Functionality,100% Full-On Waveform,Write period=10 duty=10 enable=1,u_pwm_vip_if.pwm_out driven continuously HIGH,High time equals period; 0 Low cycles,Test Plan Item 6,PASSED
+VPLAN,TEST_PWM_07,PWM Functionality,0% Full-Off Waveform,Write period=10 duty=0 enable=1,u_pwm_vip_if.pwm_out driven continuously LOW,Low time equals period; 0 High cycles,Test Plan Item 6,PASSED
+VPLAN,TEST_PWM_08,PWM Functionality,Dynamic Duty Reconfiguration,Modify pwm_duty from 5 to 8 during runtime,VIP monitor observes smooth transition at next period,Duty changes to 80% without runt pulses,Test Plan Item 6,PASSED

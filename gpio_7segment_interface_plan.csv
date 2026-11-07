@@ -1,0 +1,61 @@
+# ==============================================================================
+# RISC-V Smart Control SoC - GPIO & 7-Segment Display External Interface Specification
+# Reference: RISC_V_Smart_Control_SoC_Test_Plan(2).xlsx (Items 7 & 9)
+# Peripheral Base Address: 0x4000_A000 | Interconnect: AXI4-Lite Slave
+# Target VIP: gpio_vip (tb/vip/gpio_vip/gpio_if.sv)
+# ==============================================================================
+
+# --- SECTION 1: PHYSICAL BOUNDARY SIGNALS ---
+Section,Signal_Name,Direction_VIP,Direction_DUT,Bit_Width,Clock_Domain,Reset_Domain,Active_Level,DUT_Port,VIP_Interface_Port,Description
+PINOUT,gpio_in[7:0],OUTPUT,INPUT,8,clk (100MHz),rst_n,Active-High,dut.gpio_in,u_gpio_vip_if.gpio_in,External switches and buttons driven into SoC by VIP driver
+PINOUT,gpio_out[7:0],INPUT,OUTPUT,8,clk (100MHz),rst_n,Active-Low/High,dut.gpio_out,u_gpio_vip_if.gpio_out,Status LEDs or 7-segment display cathodes monitored by VIP
+PINOUT,irq_gpio,INPUT,OUTPUT,1,clk (100MHz),rst_n,Active-High,dut.irq_gpio,u_gpio_vip_if.irq_gpio,Pin-change interrupt signal routed to VeeR PIC interrupt line 2
+
+# --- SECTION 2: MEMORY-MAPPED REGISTERS (BASE: 0x4000_A000) ---
+Section,Register_Name,Offset,Access_Type,Reset_Value,Bitfield,Field_Name,Field_Description
+REG_SPEC,GPIO_IN,0x00,RO,0x00000000,[7:0],IN,Synchronized 8-bit input pin values (triple flip-flop synchronizer)
+REG_SPEC,GPIO_OUT,0x04,RW,0x00000000,[7:0],OUT,8-bit output register driving status LEDs or 7-segment display segments
+REG_SPEC,GPIO_IRQ_EN,0x08,RW,0x00000000,[7:0],CHANGE_EN,Per-bit input change edge detection interrupt enable mask
+REG_SPEC,GPIO_STATUS,0x0C,W1C,0x00000000,[0],CHANGED,Interrupt flag asserted when an enabled input edge is detected (write 1 to clear)
+
+# --- SECTION 3: SEVEN-SEGMENT SEGMENT-TO-GPIO PIN MAPPING (TEST PLAN ITEM 9) ---
+Section,Display_Segment,GPIO_Bit,Segment_Polarity,Active_Level,Physical_Display_Position,Description
+SEG_MAP,Segment_a,gpio_out[0],Active-Low / Active-High,0=ON (Cathode) / 1=ON (Anode),Top Horizontal Bar,Topmost horizontal display segment
+SEG_MAP,Segment_b,gpio_out[1],Active-Low / Active-High,0=ON (Cathode) / 1=ON (Anode),Top Right Vertical Bar,Upper right vertical display segment
+SEG_MAP,Segment_c,gpio_out[2],Active-Low / Active-High,0=ON (Cathode) / 1=ON (Anode),Bottom Right Vertical Bar,Lower right vertical display segment
+SEG_MAP,Segment_d,gpio_out[3],Active-Low / Active-High,0=ON (Cathode) / 1=ON (Anode),Bottom Horizontal Bar,Bottommost horizontal display segment
+SEG_MAP,Segment_e,gpio_out[4],Active-Low / Active-High,0=ON (Cathode) / 1=ON (Anode),Bottom Left Vertical Bar,Lower left vertical display segment
+SEG_MAP,Segment_f,gpio_out[5],Active-Low / Active-High,0=ON (Cathode) / 1=ON (Anode),Top Left Vertical Bar,Upper left vertical display segment
+SEG_MAP,Segment_g,gpio_out[6],Active-Low / Active-High,0=ON (Cathode) / 1=ON (Anode),Middle Horizontal Bar,Center horizontal display segment
+SEG_MAP,Decimal_Point,gpio_out[7],Active-Low / Active-High,0=ON (Cathode) / 1=ON (Anode),Bottom Right Point (DP),Fractional point indicator
+
+# --- SECTION 4: 7-SEGMENT CHARACTER DECODING TRUTH TABLE ---
+Section,Hex_Digit,Decoded_Char,Segment_Pattern_Active_High[g:a],Segment_Pattern_Active_Low[g:a],Hex_Code_Active_Low,Hex_Code_Active_High
+TRUTH_TABLE,0x0,0,7'b0111111,7'b1000000,0x40,0x3F
+TRUTH_TABLE,0x1,1,7'b0000110,7'b1111001,0x79,0x06
+TRUTH_TABLE,0x2,2,7'b1011011,7'b0100100,0x24,0x5B
+TRUTH_TABLE,0x3,3,7'b1001111,7'b0110000,0x30,0x4F
+TRUTH_TABLE,0x4,4,7'b1100110,7'b0011001,0x19,0x66
+TRUTH_TABLE,0x5,5,7'b1101101,7'b0010010,0x12,0x6D
+TRUTH_TABLE,0x6,6,7'b1111101,7'b0000010,0x02,0x7D
+TRUTH_TABLE,0x7,7,7'b0000111,7'b1111000,0x78,0x07
+TRUTH_TABLE,0x8,8,7'b1111111,7'b0000000,0x00,0x7F
+TRUTH_TABLE,0x9,9,7'b1101111,7'b0010000,0x10,0x6F
+TRUTH_TABLE,0xA,A,7'b1110111,7'b0001000,0x08,0x77
+TRUTH_TABLE,0xB,b,7'b1111100,7'b0000011,0x03,0x7C
+TRUTH_TABLE,0xC,C,7'b0111001,7'b1000110,0x46,0x39
+TRUTH_TABLE,0xD,d,7'b1011110,7'b0100001,0x21,0x5E
+TRUTH_TABLE,0xE,E,7'b1111001,7'b0000110,0x06,0x79
+TRUTH_TABLE,0xF,F,7'b1110001,7'b0001110,0x0E,0x71
+
+# --- SECTION 5: VERIFICATION SCENARIOS & CHECKPOINTS (TEST PLAN ITEMS 7 & 9) ---
+Section,Test_ID,Category,Test_Scenario,Stimulus_Applied,Expected_VIP_Observation,Pass_Criteria,Test_Plan_Ref,Execution_Status
+VPLAN,TEST_GPIO_01,GPIO Functionality,Reset State Check,Assert system reset (rst_n=0),u_gpio_vip_if.gpio_out equals 0x00 and irq_gpio equals 0,Outputs 0x00 and no spurious IRQ asserted,Test Plan Item 1 & 7,PASSED
+VPLAN,TEST_GPIO_02,GPIO Functionality,Output Register Write & Readback,CPU writes 0xA5 to GPIO_OUT (0x4000_A004),u_gpio_vip_if.gpio_out transitions to 0xA5,VIP monitor observes gpio_out == 8'hA5,Test Plan Item 7,PASSED
+VPLAN,TEST_GPIO_03,GPIO Functionality,Input Port Driving & Synchronization,VIP driver drives gpio_in = 8'h3C,CPU reads GPIO_IN (0x4000_A000) after 3 clock cycles,CPU register reads exactly 0x3C,Test Plan Item 7,PASSED
+VPLAN,TEST_GPIO_04,GPIO Functionality,Pin Change Interrupt Assertion,Write GPIO_IRQ_EN=0x01 then VIP driver toggles gpio_in[0],u_gpio_vip_if.irq_gpio asserts HIGH,irq_gpio == 1 and reaches PIC interrupt line 2,Test Plan Item 7 & 10,PASSED
+VPLAN,TEST_GPIO_05,GPIO Functionality,W1C Interrupt Clearance,CPU writes 1 to GPIO_STATUS (0x4000_A00C),u_gpio_vip_if.irq_gpio deasserts back to LOW,irq_gpio clears to 0,Test Plan Item 7 & 10,PASSED
+VPLAN,TEST_7SEG_01,7-Segment via GPIO,Numeric Digit '0' Decoding,CPU writes 0x40 (Active-Low '0') to GPIO_OUT,VIP monitor decodes segments a..f active,VIP analysis port reports decoded_7seg_char = "0",Test Plan Item 9,PASSED
+VPLAN,TEST_7SEG_02,7-Segment via GPIO,Numeric Digit '1' Decoding,CPU writes 0x79 (Active-Low '1') to GPIO_OUT,VIP monitor decodes segments b..c active,VIP analysis port reports decoded_7seg_char = "1",Test Plan Item 9,PASSED
+VPLAN,TEST_7SEG_03,7-Segment via GPIO,Numeric Digit '8' Decoding,CPU writes 0x00 (Active-Low '8') to GPIO_OUT,VIP monitor decodes all 7 segments active,VIP analysis port reports decoded_7seg_char = "8",Test Plan Item 9,PASSED
+VPLAN,TEST_7SEG_04,7-Segment via GPIO,Hex Letters 'A'-'F' Decoding,CPU sequences through 0x08 0x03 0x46 0x21 0x06 0x0E,VIP monitor decodes characters A b C d E F,Decoded sequence matches expected characters,Test Plan Item 9,PASSED

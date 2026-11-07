@@ -192,10 +192,7 @@ module tb_c_uart;
     // -------------------------------------------------------------------------
     // Verdi Waveform Dumping (FSDB)
     // -------------------------------------------------------------------------
-        initial begin
-    logic [7:0] captured_uart_byte;
-    integer pwm_high_samples;
-    integer pwm_low_samples;
+    initial begin
         $fsdbDumpfile("dump.fsdb");
         $fsdbDumpvars(0, tb_c_uart, "+all");
         $fsdbDumpSVA;
@@ -314,14 +311,14 @@ module tb_c_uart;
     endtask
 
     initial begin
-        logic [31:0] firmware_words [0:51];
+        logic [31:0] firmware_words [0:1023];
         logic [7:0] rx_byte;
         integer i;
         string uart_capture;
         string expected;
 
         uart_capture = "";
-        expected = "\r\nRISC-V C UART TEST STARTED\r\nUART CONFIGURATION: 115200 BAUD, 8N1\r\nC PROGRAM EXECUTED SUCCESSFULLY\r\n";
+        expected = "\015\012RISC-V C UART TEST STARTED\015\012UART CONFIGURATION: 115200 BAUD, 8N1\015\012C PROGRAM EXECUTED SUCCESSFULLY\015\012";
 
         $display("\n===== RISC-V C UART TEST =====");
 
@@ -335,12 +332,19 @@ module tb_c_uart;
         jtag_id = 31'h00000045;
         rst_vec = (IMEM_BASE_ADDR >> 1);
 
+        // Preload IMEM with NOPs
+        for (i = 0; i < 16384; i = i + 1)
+            write_imem_word(i, 32'h0000_0013);
+
+        for (i = 0; i < 1024; i = i + 1)
+            firmware_words[i] = 32'h0000_0013;
+
         $readmemh("../c_testing/uart_test.hex", firmware_words);
 
-        for (i = 0; i < 52; i = i + 1)
+        for (i = 0; i < 1024; i = i + 1)
             write_imem_word(i, firmware_words[i]);
 
-        $display("[INFO] Loaded 52 firmware words into IMEM");
+        $display("[INFO] Loaded firmware from uart_test.hex into IMEM");
 
         repeat (10) @(posedge clk);
         rst_n = 1'b1;
@@ -352,12 +356,20 @@ module tb_c_uart;
                     @(negedge uart_tx);
                     #(BIT_PERIOD_NS / 2);
                     for (integer b = 0; b < 8; b = b + 1) begin
-                        rx_byte[b] = uart_tx;
                         #(BIT_PERIOD_NS);
+                        rx_byte[b] = uart_tx;
                     end
+                    #(BIT_PERIOD_NS);
                     if (uart_tx === 1'b1) begin
                         uart_capture = $sformatf("%s%c", uart_capture, rx_byte);
                         $write("%c", rx_byte);
+                        if (uart_capture == expected) begin
+                            $display("\n\n[INFO] UART bytes captured: %0d", uart_capture.len());
+                            $display("[PASS] C firmware UART output matches expected text.");
+                            $display("[PASS] C UART TEST SUCCESSFUL");
+                            $display("[INFO] Retired instructions: %0d", retired_instructions);
+                            $finish(0);
+                        end
                     end
                 end
             end
@@ -374,7 +386,7 @@ module tb_c_uart;
                     $error("C UART TEST FAILED");
                 end
                 $display("[INFO] Retired instructions: %0d", retired_instructions);
-                $finish;
+                $finish(1);
             end
         join
     end

@@ -1,0 +1,42 @@
+; ==============================================================================
+; Verdi Signal List & Waveform Layout for Single-IP UART SoC UVM Integration
+; Project: RISC-V Smart Control SoC - Honours Project
+; Target : Real DUT (soc_top) + UART VIP Interface
+; ==============================================================================
+
+; --- GROUP 1: CLOCK AND RESET ---
+addGroup "GROUP 1: CLOCK AND RESET"
+addSignal -h 15 /tb_top/clk
+addSignal -h 15 /tb_top/rst_n
+
+; --- GROUP 2: UART TX PATH (DUT vs INTERFACE vs UVM VIP MONITOR) ---
+addGroup "GROUP 2: UART TX (DUT vs INTERFACE vs VIP MONITOR)"
+addSignal -h 15 /tb_top/dut_uart_tx
+addSignal -h 15 /tb_top/interface_uart_tx
+addSignal -h 15 /tb_top/uvm_vip_monitor_tx
+addSignal -h 15 /tb_top/dut/u_interconnect_uart/u_axi_uart/uart_tx_o
+
+; --- GROUP 3: UART RX & IRQ SIGNALS ---
+addGroup "GROUP 3: UART RX & IRQ SIGNALS"
+addSignal -h 15 /tb_top/u_uart_vip_if/uart_rx
+addSignal -h 15 /tb_top/u_uart_vip_if/uart_irq
+
+; --- GROUP 4: UART INTERNAL RECEIVER ---
+addGroup "GROUP 4: UART INTERNAL RECEIVER"
+addSignal -h 15 -HEX /tb_top/dut/u_interconnect_uart/u_axi_uart/uart_controller_inst/rx_data_o[7:0]
+addSignal -h 15 /tb_top/dut/u_interconnect_uart/u_axi_uart/uart_controller_inst/rx_push_o
+addSignal -h 15 /tb_top/dut/u_interconnect_uart/u_axi_uart/push_controller_rx_fifo
+
+; --- GROUP 5: UART INTERNAL TRANSMITTER ---
+addGroup "GROUP 5: UART INTERNAL TRANSMITTER"
+addSignal -h 15 -HEX /tb_top/dut/u_interconnect_uart/u_axi_uart/tx_fifo_data_in_int[7:0]
+addSignal -h 15 -HEX /tb_top/dut/u_interconnect_uart/u_axi_uart/uart_controller_inst/uart_transmitter_inst/tx_data_int[7:0]
+addSignal -h 15 -HEX /tb_top/dut/u_interconnect_uart/u_axi_uart/uart_controller_inst/tx_data_i[7:0]
+addSignal -h 15 /tb_top/dut/u_interconnect_uart/u_axi_uart/uart_controller_inst/uart_transmitter_inst/tx_send_i
+addSignal -h 15 /tb_top/dut/u_interconnect_uart/u_axi_uart/uart_controller_inst/tx_load_i
+
+; --- GROUP 6: RISC-V CPU ---
+addGroup "GROUP 6: RISC-V CPU"
+addSignal -h 15 -HEX /tb_top/dut/trace_rv_i_address_ip[31:0]
+addSignal -h 15 -HEX /tb_top/dut/trace_rv_i_insn_ip[31:0]
+addSignal -h 15 /tb_top/dut/trace_rv_i_valid_ip

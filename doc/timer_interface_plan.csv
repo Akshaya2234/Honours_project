@@ -1,0 +1,35 @@
+# ==============================================================================
+# RISC-V Smart Control SoC - System Timer External Interface Specification
+# Reference: RISC_V_Smart_Control_SoC_Test_Plan(2).xlsx (Item 10)
+# Peripheral Base Address: 0x4000_8000 | Interconnect: AXI4-Lite Slave
+# Target VIP: timer_vip (tb/vip/timer_vip/timer_if.sv)
+# ==============================================================================
+
+# --- SECTION 1: PHYSICAL BOUNDARY SIGNALS ---
+Section,Signal_Name,Direction_VIP,Direction_DUT,Bit_Width,Clock_Domain,Reset_Domain,Active_Level,DUT_Port,VIP_Interface_Port,Description
+PINOUT,sample_tick,INPUT,OUTPUT,1,clk (100MHz),rst_n,Active-High,dut.sample_tick,u_timer_vip_if.sample_tick,1-cycle periodic pulse pacing sample acquisition rate (triggers SPI & DMA)
+PINOUT,irq_timer,INPUT,OUTPUT,1,clk (100MHz),rst_n,Active-High,dut.irq_timer,u_timer_vip_if.irq_timer,Timer interrupt signal routed to VeeR PIC IRQ line 1
+PINOUT,clk,INPUT,INPUT,1,clk,None,Rising-Edge,dut.clk,u_timer_vip_if.clk,SoC system clock (100 MHz / 10 ns period)
+PINOUT,rst_n,INPUT,INPUT,1,clk,None,Active-Low,dut.rst_n,u_timer_vip_if.rst_n,Asynchronous active-low system reset
+
+# --- SECTION 2: MEMORY-MAPPED REGISTERS (BASE: 0x4000_8000) ---
+Section,Register_Name,Offset,Access_Type,Reset_Value,Bitfield,Field_Name,Field_Description
+REG_SPEC,TIMER_CTRL,0x00,RW,0x00000000,[0],en,Timer enable control bit (1 = Active countdown, 0 = Stopped)
+REG_SPEC,TIMER_RELOAD,0x04,RW,0x00000000,[31:0],reload,Reload divisor value for sample_tick frequency: F_tick = F_clk / (reload + 1)
+REG_SPEC,TIMER_COUNT,0x08,RO,0x00000000,[31:0],count,Current running down-counter value
+REG_SPEC,TIMER_STATUS,0x0C,W1C,0x00000000,[0],tick,Interrupt tick pending flag (write 1 to clear)
+
+# --- SECTION 3: TIMING & CALCULATION SPECIFICATIONS ---
+Section,Parameter_Name,Calculation_Formula,Nominal_Test_Value,Units,Description
+TIMING_SPEC,Clock_Period,T_clk = 1 / Frequency,10,ns,Main system clock period at 100 MHz
+TIMING_SPEC,Sample_Tick_Period,T_tick = (reload + 1) * T_clk,510,ns,Duration between consecutive sample_tick pulses when reload=50
+TIMING_SPEC,Tick_Frequency,F_tick = 100MHz / (reload + 1),196.07,kHz,Pacing rate for SPI ADC auto-trigger acquisitions
+TIMING_SPEC,Tick_Pulse_Width,Width = 1 * T_clk,10,ns,Single system clock cycle strobe duration
+
+# --- SECTION 4: VERIFICATION SCENARIOS & CHECKPOINTS (TEST PLAN ITEM 10) ---
+Section,Test_ID,Category,Test_Scenario,Stimulus_Applied,Expected_VIP_Observation,Pass_Criteria,Test_Plan_Ref,Execution_Status
+VPLAN,TEST_TIMER_01,Timer Functionality,Reset State Check,Assert system reset (rst_n=0),sample_tick remains LOW; irq_timer remains 0,No spurious ticks or interrupts during reset,Test Plan Item 1 & 10,PASSED
+VPLAN,TEST_TIMER_02,Timer Functionality,Disabled Countdown Check,Write reload=50 enable=0 to 0x4000_8000,sample_tick remains continuously LOW,No periodic ticks generated while en=0,Test Plan Item 10,PASSED
+VPLAN,TEST_TIMER_03,Timer Functionality,Periodic Tick Generation,Write reload=50 enable=1 to 0x4000_8000,VIP monitor captures periodic ticks every 51 cycles,sample_tick period measured accurately with 0 jitter,Test Plan Item 10,PASSED
+VPLAN,TEST_TIMER_04,Timer Functionality,Timer Interrupt Assertion,Timer countdown completes,u_timer_vip_if.irq_timer asserts HIGH,irq_timer == 1 and reaches PIC interrupt line 1,Test Plan Item 10,PASSED
+VPLAN,TEST_TIMER_05,Timer Functionality,W1C Status Clearance,CPU writes 1 to TIMER_STATUS (0x4000_800C),u_timer_vip_if.irq_timer deasserts back to LOW,irq_timer clears to 0 upon write-1,Test Plan Item 10,PASSED
