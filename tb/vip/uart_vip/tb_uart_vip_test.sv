@@ -106,7 +106,7 @@ module tb_uart_vip_test;
 
     initial begin
         // Set virtual interface in config_db
-        uvm_config_db#(virtual uart_if)::set(null, "*", "vif", u_uart_if);
+        uvm_config_db#(virtual uart_if)::set(null, "*", "uart_vif", u_uart_if);
 
         // Run the UVM test
         run_test("uart_vip_sanity_test");

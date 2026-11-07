@@ -211,23 +211,18 @@ module tb_soc_top;
     initial begin
         // 1. UART Virtual Interface
         uvm_config_db#(virtual uart_if)::set(null, "*", "uart_vif", u_uart_vip_if);
-        uvm_config_db#(virtual uart_if)::set(null, "*", "vif", u_uart_vip_if);
 
         // 2. Timer Virtual Interface
         uvm_config_db#(virtual timer_if)::set(null, "*", "timer_vif", u_timer_vip_if);
-        uvm_config_db#(virtual timer_if)::set(null, "*", "vif", u_timer_vip_if);
 
         // 3. GPIO / 7-Segment Virtual Interface
         uvm_config_db#(virtual gpio_if)::set(null, "*", "gpio_vif", u_gpio_vip_if);
-        uvm_config_db#(virtual gpio_if)::set(null, "*", "vif", u_gpio_vip_if);
 
         // 4. PWM Virtual Interface
         uvm_config_db#(virtual pwm_if)::set(null, "*", "pwm_vif", u_pwm_vip_if);
-        uvm_config_db#(virtual pwm_if)::set(null, "*", "vif", u_pwm_vip_if);
 
         // 5. SPI ADC Virtual Interface
         uvm_config_db#(virtual spi_adc_if)::set(null, "*", "spi_adc_vif", u_spi_adc_vip_if);
-        uvm_config_db#(virtual spi_adc_if)::set(null, "*", "vif", u_spi_adc_vip_if);
 
         // Run the top-level UVM test (launches UVM phases concurrently with SoC stimulus)
         run_test("soc_test");
